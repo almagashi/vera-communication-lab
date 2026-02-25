@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vera Extension</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Vera</h1>
+      <p class="muted">Auto-analyzes focused fields and shows an insight dot.</p>
+
+      <label for="apiBase">Vera API URL</label>
+      <input id="apiBase" placeholder="http://127.0.0.1:8000" />
+      <button id="saveBtn" class="secondary">Save API URL</button>
+
+      <button id="analyzeBtn">Analyze Current Draft</button>
+      <button id="rewriteBtn" class="secondary">Apply Firmer Rewrite</button>
+
+      <section id="status" class="status">Ready.</section>
+      <section id="score" class="score"></section>
+      <section id="issues" class="issues"></section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
