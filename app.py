@@ -1,14 +1,25 @@
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from fastapi.middleware.cors import CORSMiddleware
+
+from vera_comm_intel.llm_analysis import LLMConfigurationError, analyze_written_with_llm
 from vera_comm_intel import analyze_transcript, analyze_written_text
 
-app = FastAPI(title="Vera Communication Intelligence", version="0.2.0")
+app = FastAPI(title="Vera Communication Intelligence", version="0.3.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 WEB_DIR = Path(__file__).parent / "web"
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
@@ -38,3 +49,13 @@ def analyze_written(payload: WrittenRequest) -> dict:
 def analyze_meeting(payload: TranscriptRequest) -> dict:
     analysis = analyze_transcript(payload.transcript, payload.user)
     return asdict(analysis)
+
+
+@app.post("/api/analyze/written-llm")
+def analyze_written_llm(payload: WrittenRequest) -> dict:
+    try:
+        return analyze_written_with_llm(payload.text)
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"LLM request failed: {exc}") from exc

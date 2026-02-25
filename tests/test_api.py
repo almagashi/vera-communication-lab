@@ -29,3 +29,9 @@ def test_transcript_endpoint_returns_report():
     data = response.json()
     assert data["user"] == "Alex"
     assert "speaking_time_pct" in data
+
+
+def test_written_llm_endpoint_without_key(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    response = client.post("/api/analyze/written-llm", json={"text": "Hello"})
+    assert response.status_code == 500
