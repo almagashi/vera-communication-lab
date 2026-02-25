@@ -9,22 +9,26 @@
   let currentApiBase = DEFAULT_API_BASE;
 
   function isEditable(el) {
-    return (
-      el &&
-      (el.tagName === "TEXTAREA" ||
-        (el.tagName === "INPUT" && (el.type === "text" || el.type === "search")) ||
-        el.isContentEditable)
-    );
+    if (!el) return false;
+    const isTextInput =
+      el.tagName === "TEXTAREA" ||
+      (el.tagName === "INPUT" && ["text", "search", "email", "url"].includes((el.type || "").toLowerCase()));
+    const contentEditable = el.isContentEditable || el.getAttribute("contenteditable") === "true";
+    const textboxRole = (el.getAttribute("role") || "").toLowerCase() === "textbox";
+    return isTextInput || contentEditable || textboxRole;
   }
 
   function getEditableText(el) {
     if (!el) return "";
-    return el.isContentEditable ? el.innerText || "" : el.value || "";
+    if (el.isContentEditable || (el.getAttribute("role") || "").toLowerCase() === "textbox") {
+      return el.innerText || el.textContent || "";
+    }
+    return el.value || "";
   }
 
   function setEditableText(el, text) {
     if (!el) return;
-    if (el.isContentEditable) {
+    if (el.isContentEditable || (el.getAttribute("role") || "").toLowerCase() === "textbox") {
       el.innerText = text;
     } else {
       el.value = text;
@@ -62,6 +66,13 @@
     return indicator;
   }
 
+  function setIndicatorState(state) {
+    const dot = ensureIndicator();
+    if (state === "loading") dot.style.background = "#f59e0b";
+    else if (state === "error") dot.style.background = "#ef4444";
+    else dot.style.background = "#0284c7";
+  }
+
   function ensurePanel() {
     if (panel) return panel;
     panel = document.createElement("div");
@@ -90,12 +101,16 @@
     const rect = activeEditable.getBoundingClientRect();
     const dot = ensureIndicator();
     dot.style.display = "block";
-    dot.style.top = `${window.scrollY + rect.top + 6}px`;
-    dot.style.left = `${window.scrollX + rect.right - 24}px`;
+
+    const top = window.scrollY + rect.top + 6;
+    const left = window.scrollX + Math.max(8, rect.right - 24);
+
+    dot.style.top = `${top}px`;
+    dot.style.left = `${left}px`;
 
     if (panel && panel.style.display === "block") {
       panel.style.top = `${window.scrollY + rect.top + 28}px`;
-      panel.style.left = `${window.scrollX + rect.right - 350}px`;
+      panel.style.left = `${window.scrollX + Math.max(8, rect.right - 350)}px`;
     }
   }
 
@@ -171,11 +186,12 @@
   async function analyzeActive() {
     if (!activeEditable) return;
     const text = getEditableText(activeEditable).trim();
-    if (!text || text.length < 8) {
+    if (!text || text.length < 4) {
       latestAnalysis = null;
       return;
     }
 
+    setIndicatorState("loading");
     currentApiBase = await getApiBase();
     try {
       const response = await fetch(`${currentApiBase}/api/analyze/written-llm`, {
@@ -192,16 +208,19 @@
           rewrite: text,
           issues: [],
         };
+        setIndicatorState("error");
       } else {
         latestAnalysis = await response.json();
+        setIndicatorState("ok");
       }
-    } catch (error) {
+    } catch (_error) {
       latestAnalysis = {
         firmness_score: 0,
-        summary: `Could not reach Vera API at ${currentApiBase}. Start backend and check CORS/settings.`,
+        summary: `Could not reach Vera API at ${currentApiBase}. Start backend and check API URL.`,
         rewrite: text,
         issues: [],
       };
+      setIndicatorState("error");
     }
 
     renderPanel();
@@ -210,12 +229,14 @@
 
   function scheduleAnalyze() {
     clearTimeout(analyzeTimer);
-    analyzeTimer = setTimeout(analyzeActive, 700);
+    analyzeTimer = setTimeout(analyzeActive, 650);
   }
 
   document.addEventListener("focusin", (event) => {
     if (isEditable(event.target)) {
       activeEditable = event.target;
+      ensureIndicator();
+      setIndicatorState("loading");
       positionUi();
       scheduleAnalyze();
     }
@@ -227,6 +248,18 @@
       scheduleAnalyze();
     }
   });
+
+  // fallback for pages that change focus without focusin bubbling
+  setInterval(() => {
+    const ae = document.activeElement;
+    if (isEditable(ae) && ae !== activeEditable) {
+      activeEditable = ae;
+      ensureIndicator();
+      setIndicatorState("loading");
+      positionUi();
+      scheduleAnalyze();
+    }
+  }, 1000);
 
   window.addEventListener("scroll", positionUi, true);
   window.addEventListener("resize", positionUi);

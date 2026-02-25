@@ -34,8 +34,12 @@ Open `http://127.0.0.1:8000`.
 7. Click inside a text field and type; Vera auto-analyzes and shows a blue dot
 8. Click the dot to open details and apply rewrite
 
-If popup shows connection errors, make sure:
-- You are not on `chrome://` pages
+If the dot does not appear:
+- Reload the extension from `chrome://extensions` and refresh the target page
+- Click directly into the editable field first
+- Test on a normal page (not `chrome://` pages)
+
+If popup shows API errors, make sure:
 - Backend is running at `http://127.0.0.1:8000`
 - `OPENAI_API_KEY` is set before launching backend
 

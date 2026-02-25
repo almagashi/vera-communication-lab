@@ -76,3 +76,18 @@ input {
   border-radius:8px;
   padding:8px;
 }
+
+
+details {
+  margin: 8px 0 10px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px;
+  background: #020617;
+}
+
+summary {
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 12px;
+}
