@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vera — Communication Intelligence</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Vera</h1>
+        <p>Communication Intelligence for written and meeting communication.</p>
+      </header>
+
+      <section class="card">
+        <h2>Written Analyzer</h2>
+        <textarea id="writtenText" rows="6" placeholder="Paste your email, Slack draft, or document text..."></textarea>
+        <button id="analyzeWritten">Analyze Written Text</button>
+        <pre id="writtenResult" class="result"></pre>
+      </section>
+
+      <section class="card">
+        <h2>Transcript Lab</h2>
+        <input id="speaker" placeholder="Your speaker tag (e.g., Alex)" />
+        <textarea id="transcriptText" rows="8" placeholder="Alex: Sorry, just a quick question...\nJordan: We should decide now."></textarea>
+        <button id="analyzeTranscript">Analyze Transcript</button>
+        <pre id="transcriptResult" class="result"></pre>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
